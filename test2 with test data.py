@@ -15,6 +15,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.model_selection import cross_val_score
 
 
 # Load your CSV file
@@ -46,7 +47,32 @@ stepvalues = df['Step'].values
 
 x_train, x_test, y_train, y_test = train_test_split(coordinates, stepvalues, test_size=0.2, random_state=500953158)
 
+# Import cross_val_score if not already imported
 
+
+# Define a scoring function
+scoring = 'neg_mean_absolute_error'
+
+# Cross-validation for Linear Regression before training
+cv_scores1 = cross_val_score(LinearRegression(), coordinates, stepvalues, cv=5, scoring=scoring)
+cv_mae1 = -cv_scores1.mean()  # Negate because scoring returns negative MAE
+print(f"Cross-validation MAE for Linear Regression: {round(cv_mae1, 2)}")
+
+# Cross-validation for Random Forest before training
+cv_scores2 = cross_val_score(RandomForestRegressor(n_estimators=50, max_depth=5, min_samples_split=10, 
+                                                   min_samples_leaf=5, max_features='sqrt', random_state=500953158), 
+                             coordinates, stepvalues, cv=5, scoring=scoring)
+cv_mae2 = -cv_scores2.mean()
+print(f"Cross-validation MAE for Random Forest: {round(cv_mae2, 2)}")
+
+# Cross-validation for Decision Tree before training
+cv_scores3 = cross_val_score(DecisionTreeRegressor(max_depth=5, min_samples_split=10, min_samples_leaf=5, 
+                                                   random_state=500953158), 
+                             coordinates, stepvalues, cv=5, scoring=scoring)
+cv_mae3 = -cv_scores3.mean()
+print(f"Cross-validation MAE for Decision Tree: {round(cv_mae3, 2)}")
+
+# Proceed with your original code for fitting the models and evaluating on test data
 
 """Model 1: Linear Regression"""
 my_model1 = LinearRegression()
