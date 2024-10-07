@@ -64,9 +64,11 @@ print("Model 1 training MAE is: ", round(mae_train1, 2))
 
 
 """Model 2: Random Forest"""
-my_model2 = RandomForestRegressor(n_estimators=10,
-                                  
-min_samples_leaf=2,
+my_model2 = RandomForestRegressor(n_estimators=50,  # Number of trees
+                                  max_depth=5,      # Reduce tree depth
+                                  min_samples_split=10,  # Increase the minimum number of samples to split a node
+                                  min_samples_leaf=5,    # Increase the minimum number of samples per leaf node
+                                  max_features='sqrt',   # Consider more features per split
                                   random_state=500953158)
 my_model2.fit(x_train, y_train)
 y_pred_train2 = my_model2.predict(x_train)
@@ -103,7 +105,7 @@ grid_search.fit(x_train, y_train)
 best_params = grid_search.best_params_
 print("Best Hyperparameters:", best_params)
 print("\n==============================\n")
-best_model3 = grid_search.best_estimator_
+best_model2_1 = grid_search.best_estimator_
 
 # ============================
 # Adding Test Data Evaluation
@@ -134,36 +136,75 @@ print("\n==============================\n")
 print("Model 1 (Linear Regression) Test MAE is: ", round(mae_test1, 2))
 print("Model 2 (Random Forest) Test MAE is: ", round(mae_test2, 2))
 print("\n==============================\n")
-y_pred_test = best_model3.predict(x_test)
+y_pred_test = best_model2_1.predict(x_test)
 
 
 # Calculate the test Mean Absolute Error (MAE)
 mae_test = mean_absolute_error(y_test, y_pred_test)
 print("Test MAE of the best model is:", round(mae_test, 2))
 
+# ============================
+# Adding Model 3: Decision Tree Regressor
+# ============================
+param_grid_tree = {
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4]
+}
+my_model3 = DecisionTreeRegressor(max_depth=5,           # Reduce tree depth
+                                  min_samples_split=10,  # Increase the minimum number of samples to split a node
+                                  min_samples_leaf=5,    # Increase the minimum number of samples per leaf node
+                                  random_state=500953158)
+my_model3.fit(x_train, y_train)
+y_pred_train3 = my_model3.predict(x_train)
 
-# # ============================
-# # Plotting Test Predictions vs Actual Values
-# # ============================
+# Evaluate training MAE
+mae_train3 = mean_absolute_error(y_pred_train3, y_train)
+print("Updated Model 3 training MAE is: ", round(mae_train3, 2))
 
-# plt.figure(figsize=(10, 6))
+# Test Model 3 on the test data
+y_pred_test3 = my_model3.predict(x_test)
+mae_test3 = mean_absolute_error(y_test, y_pred_test3)
+print("Updated Model 3 test MAE is: ", round(mae_test3, 2))
 
-# # Plot actual values
-# plt.plot(range(len(y_test)), y_test, label='Actual Values', color='b', marker='o')
+# ============================
+# Adding Model 3.1: Decision Tree Regressor with GridSearchCV
+# ============================
 
-# # Plot predictions from Model 1 (Linear Regression)
-# plt.plot(range(len(y_pred_test1)), y_pred_test1, label='Model 1 Predictions (Linear Regression)', color='g', linestyle='--', marker='x')
+# Define the parameter grid for GridSearchCV
+param_grid_tree = {
+    'max_depth': [5, 10, 20, None],  # Experiment with different tree depths
+    'min_samples_split': [2, 5, 10],  # Minimum number of samples required to split a node
+    'min_samples_leaf': [1, 2, 4, 5]  # Minimum number of samples in a leaf node
+}
 
-# # Plot predictions from Model 2 (Random Forest)
-# plt.plot(range(len(y_pred_test2)), y_pred_test2, label='Model 2 Predictions (Random Forest)', color='r', linestyle='--', marker='d')
+# Initialize the Decision Tree Regressor for GridSearchCV
+my_model3_1 = DecisionTreeRegressor(random_state=500953158)
 
-# # Add title and labels
-# plt.title('Test Predictions vs Actual Values')
-# plt.xlabel('Data Point Index')
-# plt.ylabel('Step Value')
+# Perform Grid Search with 5-fold cross-validation
+grid_search_tree = GridSearchCV(my_model3_1, 
+                                param_grid_tree, 
+                                cv=5,  # 5-fold cross-validation
+                                scoring='neg_mean_absolute_error',  # Scoring based on Mean Absolute Error
+                                n_jobs=4)  # Use multiple cores for faster processing
 
-# # Add a legend
-# plt.legend()
+# Fit the model using GridSearchCV
+grid_search_tree.fit(x_train, y_train)
 
-# # Show the plot
-# plt.show()
+# Get the best hyperparameters
+best_params_tree = grid_search_tree.best_params_
+print("Best Hyperparameters for Decision Tree (GridSearchCV):", best_params_tree)
+print("\n==============================\n")
+
+# Get the best model from GridSearchCV
+best_model3_1 = grid_search_tree.best_estimator_
+
+# Evaluate the model on the training data
+y_pred_train3_1 = best_model3_1.predict(x_train)
+mae_train3_1 = mean_absolute_error(y_pred_train3_1, y_train)
+print("Best Model 3.1 (Decision Tree with GridSearchCV) training MAE is: ", round(mae_train3_1, 2))
+
+# Evaluate the model on the test data
+y_pred_test3_1 = best_model3_1.predict(x_test)
+mae_test3_1 = mean_absolute_error(y_test, y_pred_test3_1)
+print("Best Model 3.1 (Decision Tree with GridSearchCV) test MAE is: ", round(mae_test3_1, 2))
