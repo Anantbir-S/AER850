@@ -60,13 +60,13 @@ print("Model 1 training MAE is: ", round(mae_train1,2))
 
 
 """Training Second Model"""
-my_model2 = RandomForestRegressor(n_estimators=30, random_state=42)
+my_model2 = RandomForestRegressor(n_estimators=10, random_state=500953158)
 my_model2.fit(x_train, y_train)
 y_pred_train2 = my_model2.predict(x_train)
 mae_train2 = mean_absolute_error(y_pred_train2, y_train)
 print("Model 2 training MAE is: ", round(mae_train2,2))
 
-for i in range(5):
+for i in range(10):
     print("Mode 1 Predictions:",
           round(y_pred_train1[i],2),
           "Mode 2 Predictions:|",
@@ -74,17 +74,17 @@ for i in range(5):
           "Actual values:",
           round(y_train[i],2))
 
-"""GridSearchCV"""
-param_grid = {
-    'n_estimators': [10, 30, 50],
-    'max_depth': [None, 10, 20, 30],
-    'min_samples_split': [2, 5, 10],
-    'min_samples_leaf': [1, 2, 4],
-    'max_features': ['sqrt', 'log2']
-}
-my_model3 = RandomForestRegressor(random_state=500953158)
-grid_search = GridSearchCV(my_model3, param_grid, cv=5, scoring='neg_mean_absolute_error', n_jobs=1)
-grid_search.fit(x_train, y_train)
-best_params = grid_search.best_params_
-print("Best Hyperparameters:", best_params)
-best_model3 = grid_search.best_estimator_
+# """GridSearchCV"""
+# param_grid = {
+#     'n_estimators': [10, 30, 50],
+#     'max_depth': [None, 10, 20, 30],
+#     'min_samples_split': [2, 5, 10],
+#     'min_samples_leaf': [1, 2, 4],
+#     'max_features': ['sqrt', 'log2']
+# }
+# my_model3 = RandomForestRegressor(random_state=500953158)
+# grid_search = GridSearchCV(my_model3, param_grid, cv=5, scoring='neg_mean_absolute_error', n_jobs=1)
+# grid_search.fit(x_train, y_train)
+# best_params = grid_search.best_params_
+# print("Best Hyperparameters:", best_params)
+# best_model3 = grid_search.best_estimator_
