@@ -139,3 +139,10 @@ y_pred_test2 = my_model2.predict(X_test)
 mae2 = mean_absolute_error(y_pred_test2, y_test)
 print(mae2)
 
+"""Training Second Model"""
+my_model2 = RandomForestRegressor(n_estimators=30, random_state=)
+my_model2.fit(X_train, y_train)
+y_pred_train2 = my_model2.predict(X_train)
+mae_train2 = mean_absolute_error(y_pred_train2, y_train)
+print("Model 2 training MAE is: ", round(mae_train2,2))
+
