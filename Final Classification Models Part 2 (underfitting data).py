@@ -52,7 +52,7 @@ rf_classifier = RandomForestClassifier(n_estimators=100,
 
 # Define parameter grid for GridSearch
 param_grid_rf = {
-    'n_estimators': [10,20],  # Fewer trees to make the model simpler
+    'n_estimators': [10,20, 30, 40],  # Fewer trees to make the model simpler
     'max_depth': [1,2,3],  # Shallower trees
     'min_samples_split': [2,4,6],  # Require more samples to split nodes
     'min_samples_leaf': [1,2,3],  # Require more samples at each leaf node
@@ -90,13 +90,16 @@ svm_classifier = SVC(random_state=500953158)
 
 # Define parameter grid for GridSearch
 param_grid_svm = {
-    'C': [1, 10, 100],  # Regularization parameter
-    'kernel': ['linear', 'rbf'],  # Kernel type
-    'gamma': ['scale', 'auto']  # Kernel coefficient
+    'C': [0.01, 0.1, 0.2, 0.5],  # Reduced regularization parameter for simpler models
+    'kernel': ['linear'],  # Limiting to a simpler kernel
+    'gamma': ['scale']  # Keeping a simple gamma for the linear case
 }
 
 # Perform Grid Search with cross-validation
-grid_search_svm = GridSearchCV(estimator=svm_classifier, param_grid=param_grid_svm, cv=3, n_jobs=-1)
+grid_search_svm = GridSearchCV(estimator=svm_classifier, 
+                               param_grid=param_grid_svm, 
+                               cv=5, 
+                               n_jobs=-1)
 
 # Fit the model with grid search on training data
 grid_search_svm.fit(x_train, y_train)
@@ -127,19 +130,19 @@ dt_classifier = DecisionTreeClassifier(max_depth=3,
 
 # Parameter grid specific to Decision Tree (no Random Forest parameters)
 param_dist_dt = {
-    'criterion': ['gini', 'entropy'],
-    'splitter': ['best', 'random'],
-    'max_depth': [5, 10],
-    'min_samples_split': [5, 10],
-    'min_samples_leaf': [2, 5],
-    'class_weight': [None, 'balanced']
+    'criterion': ['gini'],  # Limiting to one simpler criterion
+    'splitter': ['best', 'random'],  # Keeping only the 'best' splitter
+    'max_depth': [1, 2, 3],  # Reducing tree depth for simplicity
+    'min_samples_split': [10, 12, 15],  # Increasing minimum samples required to split
+    'min_samples_leaf': [5, 7, 9],  # Requiring more samples per leaf for less complexity
+    'class_weight': [None]  # Avoid balancing weights to keep it simple
 }
 
 # RandomizedSearchCV for Decision Tree (no n_estimators or bootstrap)
 random_search_dt = RandomizedSearchCV(estimator=dt_classifier, 
                                       param_distributions=param_dist_dt, 
                                       n_iter=5, 
-                                      cv=3, 
+                                      cv=5, 
                                       n_jobs=-1, 
                                       random_state=500953158)
 
@@ -204,5 +207,62 @@ confusion_matrix_stacked_train = confusion_matrix(y_train, y_pred_stacking_train
 disp_train = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix_stacked_train)
 disp_train.plot(cmap='Blues')
 plt.title("Confusion Matrix for Stacked Model (Training Data)")
+plt.show()
+
+joblib.dump(stacking_clf, 'stacking_model.joblib')
+print("Stacking model saved to 'stacking_model.joblib'.")
+
+# Load the model back from the file to demonstrate reusability
+loaded_stacking_model = joblib.load('stacking_model.joblib')
+print("Stacking model loaded from 'stacking_model.joblib'.")
+print("\n============================\n")
+
+# Given set of random coordinates for maintenance step prediction
+new_coordinates = np.array([[9.375, 3.0625, 1.51], 
+                            [6.995, 5.125, 0.3875], 
+                            [0, 3.0625, 1.93], 
+                            [9.4, 3, 1.8], 
+                            [9.4, 3, 1.3]])
+
+# Predict maintenance steps using the loaded model
+predicted_steps = loaded_stacking_model.predict(new_coordinates)
+
+# Output the predicted maintenance steps for the given coordinates
+print("Predicted Maintenance Steps for given coordinates:")
+for coords, step in zip(new_coordinates, predicted_steps):
+    print(f"Coordinates {coords} -> Predicted Maintenance Step: {step}")
+    
+
+
+
+# Initial 3D Scatter Plot of the original dataset (already plotted earlier)
+fig1 = plt.figure()
+ax1 = fig1.add_subplot(111, projection='3d')
+sc = ax1.scatter(df['X'], df['Y'], df['Z'], c=df['Step'], cmap='viridis', label='Original Data')
+plt.colorbar(sc, ax=ax1, label='Step')
+
+# Set labels and title
+ax1.set_xlabel('X')
+ax1.set_ylabel('Step')
+ax1.set_zlabel('Z')
+ax1.set_title('3D Scatter Plot of X, Y, Z with Step')
+
+# Adding predicted coordinates in a different color (e.g., red)
+predicted_coordinates = np.array([[9.375, 3.0625, 1.51], 
+                                  [6.995, 5.125, 0.3875], 
+                                  [0, 3.0625, 1.93], 
+                                  [9.4, 3, 1.8], 
+                                  [9.4, 3, 1.3]])
+
+# Plot the new predicted points in red
+ax1.scatter(predicted_coordinates[:, 0], 
+            predicted_coordinates[:, 1], 
+            predicted_coordinates[:, 2], 
+            c='red', label='Predicted Data', s=100, edgecolors='k')
+
+# Show legend to differentiate between original and predicted points
+ax1.legend()
+
+# Show the updated plot
 plt.show()
 
