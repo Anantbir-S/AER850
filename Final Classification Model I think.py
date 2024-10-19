@@ -103,11 +103,13 @@ ax.view_init(elev=30, azim=120)
 
 # Show the plot
 plt.show()
-# Correlation matrix using only the training data
-correlation_matrix = train_data[['X', 'Y', 'Z', 'Step']].corr()
-plt.figure()
+# Pearson Correlation using only the training data
+correlation_matrix = train_data[['X', 'Y', 'Z', 'Step']].corr(method='pearson')
+
+# Plotting the Pearson Correlation Matrix
+plt.figure(figsize=(10, 8))
 sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', cbar=True, square=True, linewidths=0.5)
-plt.title('Correlation Matrix of Training Data (X, Y, Z, and Step)', fontsize=15)
+plt.title('Pearson Correlation Matrix of Training Data (X, Y, Z, and Step)', fontsize=15)
 plt.show()
 
 """======================= Logistic Regression Classifier ===================================================================="""
@@ -148,7 +150,7 @@ recall_lr = recall_score(y_test, y_pred_lr_grid, average='weighted')
 print(f"Recall for Logistic Regression: {recall_lr:.4f}\n")
 
 # Precision score
-precision_lr = precision_score(y_test, y_pred_lr_grid, average='weighted')
+precision_lr = precision_score(y_test, y_pred_lr_grid, average='weighted', zero_division=0)
 print(f"Precision for Logistic Regression: {precision_lr:.4f}\n")
 
 # Accuracy score
@@ -188,11 +190,11 @@ f1_grid_search = f1_score(y_test, y_pred_rf_grid, average='weighted')
 print(f"F1 Score for the best Random Forest model from Grid Search: {f1_grid_search:.4f}\n")
 
 # Recall score
-recall_rf = recall_score(y_test, y_pred_rf_grid, average='weighted')
+recall_rf = recall_score(y_test, y_pred_rf_grid, average='weighted', zero_division=0)
 print(f"Recall for Random Forest: {recall_rf:.4f}\n")
 
 # Precision score
-precision_rf = precision_score(y_test, y_pred_rf_grid, average='weighted')
+precision_rf = precision_score(y_test, y_pred_rf_grid, average='weighted', zero_division=0)
 print(f"Precision for Random Forest: {precision_rf:.4f}\n")
 
 # Accuracy score
@@ -212,6 +214,7 @@ disp_rf = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix_rf)
 # Plot the confusion matrix with a color map
 disp_rf.plot(cmap='Blues')
 plt.title("Confusion Matrix for Random Forest Classifier")
+plt.figure(figsize=(12, 10))
 plt.show()
 
 '''================== SVM Classifier ==============================================================================='''
@@ -248,7 +251,7 @@ recall_svm = recall_score(y_test, y_pred_svm_grid, average='weighted')
 print(f"Recall for SVM: {recall_svm:.4f}\n")
 
 # Precision score
-precision_svm = precision_score(y_test, y_pred_svm_grid, average='weighted')
+precision_svm = precision_score(y_test, y_pred_svm_grid, average='weighted', zero_division=0)
 print(f"Precision for SVM: {precision_svm:.4f}\n")
 
 # Accuracy score
@@ -291,18 +294,20 @@ recall_dt = recall_score(y_test, y_pred_dt_random, average='weighted')
 print(f"Recall for Decision Tree: {recall_dt:.4f}\n")
 
 # Precision score
-precision_dt = precision_score(y_test, y_pred_dt_random, average='weighted')
+precision_dt = precision_score(y_test, y_pred_dt_random, average='weighted', zero_division=0)
 print(f"Precision for Decision Tree: {precision_dt:.4f}\n")
 
 # Accuracy score
 accuracy_dt = accuracy_score(y_test, y_pred_dt_random)
 print(f"Accuracy for Decision Tree: {accuracy_dt:.4f}\n")
 
+print("\n======= Stacking Classifier =======\n")
 # Stacking Classifier
 estimators = [
     ('rf', grid_search_rf.best_estimator_),  # Random Forest from Grid Search
     ('lr', grid_search_lr.best_estimator_)   # Logistic Regression from Grid Search
 ]
+
 # Stacking Classifier with Logistic Regression as final estimator
 stacking_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression(max_iter=500))
 
@@ -321,7 +326,7 @@ recall_stacking = recall_score(y_test, y_pred_stacking, average='weighted')
 print(f"Recall for Stacked Classifier: {recall_stacking:.4f}\n")
 
 # Precision score
-precision_stacking = precision_score(y_test, y_pred_stacking, average='weighted')
+precision_stacking = precision_score(y_test, y_pred_stacking, average='weighted', zero_division=0)
 print(f"Precision for Stacked Classifier: {precision_stacking:.4f}\n")
 
 # Accuracy score
@@ -339,6 +344,7 @@ plt.show()
 stacking_clf = joblib.load('stacking_model.joblib')
 print("Stacking model loaded from 'stacking_model.joblib'.")
 
+print("\n======= Predicting Coordinates =======\n")
 # Define new coordinates
 new_coordinates = np.array([[9.375, 3.0625, 1.51], 
                             [6.995, 5.125, 0.3875], 
