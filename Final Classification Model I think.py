@@ -17,7 +17,7 @@ from sklearn.metrics import f1_score, confusion_matrix
 import joblib
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import ConfusionMatrixDisplay
-
+from sklearn.metrics import precision_score, accuracy_score, recall_score
 # Load your dataset
 csv_file = 'Project_1_Data.csv'
 df = pd.read_csv(csv_file)
@@ -110,17 +110,63 @@ sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', cbar=True, square=T
 plt.title('Correlation Matrix of Training Data (X, Y, Z, and Step)', fontsize=15)
 plt.show()
 
-# Train a Random Forest classifier with GridSearchCV
+"""======================= Logistic Regression Classifier ===================================================================="""
+
+# Logistic Regression Classifier with GridSearchCV
+print("\n======= Logistic Regression Classifier =======\n")
+
+# Define the Logistic Regression model
+logistic = LogisticRegression(multi_class='ovr', solver='saga', max_iter=5000)  
+
+# Set up the hyperparameter grid for Logistic Regression
+param_grid_lr = {
+    'C': [0.0001, 0.001, 0.01, 0.1, 1],   
+    'penalty': ['l1', 'l2']
+}
+
+# Perform Grid Search with cross-validation
+grid_search_lr = GridSearchCV(estimator=logistic, 
+                              param_grid=param_grid_lr, 
+                              cv=10, 
+                              n_jobs=-1)
+
+# Fit the Logistic Regression model using Grid Search
+grid_search_lr.fit(x_train, y_train)
+
+# Best parameters from Grid Search
+print(f"Best parameters from Grid Search: {grid_search_lr.best_params_}\n")
+
+# Predict using the best Logistic Regression model from Grid Search
+y_pred_lr_grid = grid_search_lr.predict(x_test)
+
+# Calculate and print F1 score for Logistic Regression
+f1_grid_search_lr = f1_score(y_test, y_pred_lr_grid, average='weighted')
+print(f"F1 Score for the best Logistic Regression model from Grid Search: {f1_grid_search_lr:.4f}\n")
+
+# Recall score
+recall_lr = recall_score(y_test, y_pred_lr_grid, average='weighted')
+print(f"Recall for Logistic Regression: {recall_lr:.4f}\n")
+
+# Precision score
+precision_lr = precision_score(y_test, y_pred_lr_grid, average='weighted')
+print(f"Precision for Logistic Regression: {precision_lr:.4f}\n")
+
+# Accuracy score
+accuracy_lr = accuracy_score(y_test, y_pred_lr_grid)
+print(f"Accuracy for Logistic Regression: {accuracy_lr:.4f}\n")
+
+'''================== Random Forest Classifier ==============================================================================='''
+
 print("======= Random Forest Classifier =======\n")
 rf_classifier = RandomForestClassifier(random_state=500953158)
 
 # Parameter grid for GridSearchCV
 param_grid_rf = {
-    'n_estimators': [10, 20, 30, 40],
-    'max_depth': [1, 2, 3],
-    'min_samples_split': [2, 4, 6],
-    'min_samples_leaf': [1, 2, 3],
-    'bootstrap': [True]
+    'n_estimators': [50, 70, 100],  # Increased number of trees
+    'max_depth': [1, 2, 3, 4],  # Moderate depth to balance complexity
+    'min_samples_split': [2, 5, 8],  # Ensure sufficient data for splits
+    'min_samples_leaf': [1, 2, 4],  # Control the size of leaf nodes
+    'bootstrap': [True]  # Standard bootstrap
 }
 
 # Perform Grid Search with cross-validation
@@ -139,7 +185,36 @@ y_pred_rf_grid = grid_search_rf.predict(x_test)
 
 # Calculate and print F1 score`
 f1_grid_search = f1_score(y_test, y_pred_rf_grid, average='weighted')
-print(f"F1 Score for the best Random Forest model from Grid Search: {f1_grid_search:.4f}")
+print(f"F1 Score for the best Random Forest model from Grid Search: {f1_grid_search:.4f}\n")
+
+# Recall score
+recall_rf = recall_score(y_test, y_pred_rf_grid, average='weighted')
+print(f"Recall for Random Forest: {recall_rf:.4f}\n")
+
+# Precision score
+precision_rf = precision_score(y_test, y_pred_rf_grid, average='weighted')
+print(f"Precision for Random Forest: {precision_rf:.4f}\n")
+
+# Accuracy score
+accuracy_rf = accuracy_score(y_test, y_pred_rf_grid)
+print(f"Accuracy for Random Forest: {accuracy_rf:.4f}\n")
+
+
+# Predict using the best Random Forest model from Grid Search
+y_pred_rf_grid = grid_search_rf.predict(x_test)
+
+# Generate confusion matrix for the Random Forest Classifier
+confusion_matrix_rf = confusion_matrix(y_test, y_pred_rf_grid)
+
+# Display the confusion matrix
+disp_rf = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix_rf)
+
+# Plot the confusion matrix with a color map
+disp_rf.plot(cmap='Blues')
+plt.title("Confusion Matrix for Random Forest Classifier")
+plt.show()
+
+'''================== SVM Classifier ==============================================================================='''
 
 # SVM Classifier model with GridSearchCV
 print("\n======= SVM Classifier =======\n")
@@ -153,7 +228,7 @@ param_grid_svm = {
 # Perform Grid Search with cross-validation
 grid_search_svm = GridSearchCV(estimator=svm_classifier,
                                param_grid=param_grid_svm, 
-                               cv=5,
+                               cv=3,
                                n_jobs=-1)
 
 grid_search_svm.fit(x_train, y_train)
@@ -166,9 +241,22 @@ y_pred_svm_grid = grid_search_svm.predict(x_test)
 
 # Calculate and print F1 score
 f1_grid_search_svm = f1_score(y_test, y_pred_svm_grid, average='weighted')
-print(f"F1 Score for the best SVM model from Grid Search: {f1_grid_search_svm:.4f}")
+print(f"F1 Score for the best SVM model from Grid Search: {f1_grid_search_svm:.4f}\n")
 
-# Decision Tree Classifier with RandomizedSearchCV
+# Recall score
+recall_svm = recall_score(y_test, y_pred_svm_grid, average='weighted')
+print(f"Recall for SVM: {recall_svm:.4f}\n")
+
+# Precision score
+precision_svm = precision_score(y_test, y_pred_svm_grid, average='weighted')
+print(f"Precision for SVM: {precision_svm:.4f}\n")
+
+# Accuracy score
+accuracy_svm = accuracy_score(y_test, y_pred_svm_grid)
+print(f"Accuracy for SVM: {accuracy_svm:.4f}\n")
+
+'''================== Decision Tree Classifier ============================================================================'''
+
 print("\n======= Decision Tree Classifier (Randomized Search) =======\n")
 dt_classifier = DecisionTreeClassifier(random_state=500953158)
 
@@ -176,14 +264,19 @@ dt_classifier = DecisionTreeClassifier(random_state=500953158)
 param_dist_dt = {
     'criterion': ['gini'],
     'splitter': ['best', 'random'],
-    'max_depth': [1, 2, 3],
-    'min_samples_split': [10, 12, 15],
+    'max_depth': [1, 2, 3, 4],
+    'min_samples_split': [10, 12, 15, 20],
     'min_samples_leaf': [5, 7, 9],
     'class_weight': [None]
 }
 
 # RandomizedSearchCV for Decision Tree
-random_search_dt = RandomizedSearchCV(estimator=dt_classifier, param_distributions=param_dist_dt, n_iter=5, cv=5, n_jobs=-1, random_state=500953158)
+random_search_dt = RandomizedSearchCV(estimator=dt_classifier, 
+                                      param_distributions=param_dist_dt, 
+                                      n_iter=5, 
+                                      cv=5, 
+                                      n_jobs=-1, 
+                                      random_state=500953158)
 random_search_dt.fit(x_train, y_train)
 
 # Predict using the best Decision Tree model from Randomized Search
@@ -191,15 +284,25 @@ y_pred_dt_random = random_search_dt.predict(x_test)
 
 # Calculate and print F1 score
 f1_random_search_dt = f1_score(y_test, y_pred_dt_random, average='weighted')
-print(f"F1 Score for the best Decision Tree model from Randomized Search: {f1_random_search_dt:.4f}")
+print(f"F1 Score for the best Decision Tree model from Randomized Search: {f1_random_search_dt:.4f}\n")
+
+# Recall score
+recall_dt = recall_score(y_test, y_pred_dt_random, average='weighted')
+print(f"Recall for Decision Tree: {recall_dt:.4f}\n")
+
+# Precision score
+precision_dt = precision_score(y_test, y_pred_dt_random, average='weighted')
+print(f"Precision for Decision Tree: {precision_dt:.4f}\n")
+
+# Accuracy score
+accuracy_dt = accuracy_score(y_test, y_pred_dt_random)
+print(f"Accuracy for Decision Tree: {accuracy_dt:.4f}\n")
 
 # Stacking Classifier
-print("\n===== Stacking Classifier ===== \n")
 estimators = [
     ('rf', grid_search_rf.best_estimator_),  # Random Forest from Grid Search
-    ('svm', grid_search_svm.best_estimator_)  # SVM from Grid Search
+    ('lr', grid_search_lr.best_estimator_)   # Logistic Regression from Grid Search
 ]
-
 # Stacking Classifier with Logistic Regression as final estimator
 stacking_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression(max_iter=500))
 
@@ -211,7 +314,19 @@ y_pred_stacking = stacking_clf.predict(x_test)
 
 # Calculate and print F1 Score for the Stacked Model
 f1_stacking = f1_score(y_test, y_pred_stacking, average='weighted')
-print(f"\nF1 Score for the Stacked Model: {f1_stacking:.4f}")
+print(f"\nF1 Score for the Stacked Model: {f1_stacking:.4f}\n")
+
+# Recall score
+recall_stacking = recall_score(y_test, y_pred_stacking, average='weighted')
+print(f"Recall for Stacked Classifier: {recall_stacking:.4f}\n")
+
+# Precision score
+precision_stacking = precision_score(y_test, y_pred_stacking, average='weighted')
+print(f"Precision for Stacked Classifier: {precision_stacking:.4f}\n")
+
+# Accuracy score
+accuracy_stacking = accuracy_score(y_test, y_pred_stacking)
+print(f"Accuracy for Stacked Classifier: {accuracy_stacking:.4f}\n")
 
 # Confusion matrix for the Stacked Model
 confusion_matrix_stacked = confusion_matrix(y_test, y_pred_stacking)
