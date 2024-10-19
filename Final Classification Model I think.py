@@ -9,12 +9,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from mpl_toolkits.mplot3d import Axes3D
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
 from sklearn.ensemble import RandomForestClassifier, StackingClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import f1_score, classification_report, confusion_matrix
+from sklearn.metrics import f1_score, confusion_matrix
 import joblib
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import ConfusionMatrixDisplay
@@ -29,7 +28,6 @@ y = df['Step']
 
 # Stratified train-test split to maintain class distribution
 x_train, x_test, y_train, y_test = train_test_split(X, y, 
-                                                    stratify=y, 
                                                     shuffle=True, 
                                                     test_size=0.2, 
                                                     random_state=500953158)
@@ -38,22 +36,73 @@ x_train, x_test, y_train, y_test = train_test_split(X, y,
 train_data = pd.DataFrame(x_train, columns=['X', 'Y', 'Z'])
 train_data['Step'] = y_train.values
 
+""" PLotting the Data and the Correlation Matrix """
+
+# Plot histograms for X, Y, Z, and Step
+plt.figure(figsize=(12, 10))
+
+# Histogram for X
+plt.subplot(2, 2, 1)
+sns.histplot(df['X'], kde=True, bins=20, color='blue')
+plt.title('Histogram of X')
+
+# Histogram for Y
+plt.subplot(2, 2, 2)
+sns.histplot(df['Y'], kde=True, bins=20, color='green')
+plt.title('Histogram of Y')
+
+# Histogram for Z
+plt.subplot(2, 2, 3)
+sns.histplot(df['Z'], kde=True, bins=20, color='red')
+plt.title('Histogram of Z')
+
+# Histogram for Step
+plt.subplot(2, 2, 4)
+sns.histplot(df['Step'], kde=False, bins=13, color='purple')
+plt.title('Histogram of Step (Maintenance Steps)')
+
+plt.tight_layout()
+plt.show()
+
 # 3D Scatter Plot using only the training data
-fig = plt.figure()
+# 3D Scatter Plot using only the training data
+fig = plt.figure(figsize=(10, 8))
 ax = fig.add_subplot(111, projection='3d')
+
+# Adjust marker size and add transparency for better clarity
 sc = ax.scatter(train_data['X'], 
-                train_data['Y'],
+                train_data['Y'], 
                 train_data['Z'], 
                 c=train_data['Step'], 
                 cmap='viridis', 
+                s=50,       # Adjusted size of the markers
+                alpha=0.8,  # Slight transparency for better visibility
+                edgecolors='w',  # White edge color for markers
+                linewidth=0.5,   # Thinner edge for better marker distinction
                 label='Training Data')
 
-plt.colorbar(sc, ax=ax, label='Step')
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-ax.set_title('3D Scatter Plot of Training Data (X, Y, Z) with Step')
+# Adding a color bar with the label
+cbar = plt.colorbar(sc, ax=ax, label='Step')
+cbar.set_ticks(range(int(train_data['Step'].min()), int(train_data['Step'].max())+1))
 
+# Set axis labels
+ax.set_xlabel('X', fontsize=12, labelpad=10)
+ax.set_ylabel('Y', fontsize=12, labelpad=10)
+ax.set_zlabel('Z', fontsize=12, labelpad=10)
+
+# Set axis limits for better view control
+ax.set_xlim(train_data['X'].min(), train_data['X'].max())
+ax.set_ylim(train_data['Y'].min(), train_data['Y'].max())
+ax.set_zlim(train_data['Z'].min(), train_data['Z'].max())
+
+# Set a clean title
+ax.set_title('3D Scatter Plot of Training Data (X, Y, Z) with Step', fontsize=14, pad=20)
+
+# Rotate the view for a better 3D effect
+ax.view_init(elev=30, azim=120)
+
+# Show the plot
+plt.show()
 # Correlation matrix using only the training data
 correlation_matrix = train_data[['X', 'Y', 'Z', 'Step']].corr()
 plt.figure()
@@ -62,7 +111,7 @@ plt.title('Correlation Matrix of Training Data (X, Y, Z, and Step)', fontsize=15
 plt.show()
 
 # Train a Random Forest classifier with GridSearchCV
-print("======= Random Forest =======\n")
+print("======= Random Forest Classifier =======\n")
 rf_classifier = RandomForestClassifier(random_state=500953158)
 
 # Parameter grid for GridSearchCV
@@ -83,12 +132,12 @@ grid_search_rf = GridSearchCV(estimator=rf_classifier,
 grid_search_rf.fit(x_train, y_train)
 
 # Best parameters from grid search
-print(f"Best parameters from Grid Search: {grid_search_rf.best_params_}")
+print(f"Best parameters from Grid Search: {grid_search_rf.best_params_}\n")
 
 # Predict using the best Random Forest model from grid search
 y_pred_rf_grid = grid_search_rf.predict(x_test)
 
-# Calculate and print F1 score
+# Calculate and print F1 score`
 f1_grid_search = f1_score(y_test, y_pred_rf_grid, average='weighted')
 print(f"F1 Score for the best Random Forest model from Grid Search: {f1_grid_search:.4f}")
 
@@ -145,14 +194,14 @@ f1_random_search_dt = f1_score(y_test, y_pred_dt_random, average='weighted')
 print(f"F1 Score for the best Decision Tree model from Randomized Search: {f1_random_search_dt:.4f}")
 
 # Stacking Classifier
-print("\nStacking Classifier\n")
+print("\n===== Stacking Classifier ===== \n")
 estimators = [
     ('rf', grid_search_rf.best_estimator_),  # Random Forest from Grid Search
     ('svm', grid_search_svm.best_estimator_)  # SVM from Grid Search
 ]
 
 # Stacking Classifier with Logistic Regression as final estimator
-stacking_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression())
+stacking_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression(max_iter=500))
 
 # Train the Stacking Classifier
 stacking_clf.fit(x_train, y_train)
@@ -162,7 +211,7 @@ y_pred_stacking = stacking_clf.predict(x_test)
 
 # Calculate and print F1 Score for the Stacked Model
 f1_stacking = f1_score(y_test, y_pred_stacking, average='weighted')
-print(f"F1 Score for the Stacked Model: {f1_stacking:.4f}")
+print(f"\nF1 Score for the Stacked Model: {f1_stacking:.4f}")
 
 # Confusion matrix for the Stacked Model
 confusion_matrix_stacked = confusion_matrix(y_test, y_pred_stacking)
@@ -171,10 +220,11 @@ disp.plot(cmap='Blues')
 plt.title("Confusion Matrix for Stacked Model")
 plt.show()
 
-# Save the Stacked Model
-joblib.dump(stacking_clf, 'stacking_model.joblib')
-print("Stacking model saved to 'stacking_model.joblib'.")
+# Load the saved Stacked Model
+stacking_clf = joblib.load('stacking_model.joblib')
+print("Stacking model loaded from 'stacking_model.joblib'.")
 
+# Define new coordinates
 new_coordinates = np.array([[9.375, 3.0625, 1.51], 
                             [6.995, 5.125, 0.3875], 
                             [0, 3.0625, 1.93], 
@@ -184,18 +234,19 @@ new_coordinates = np.array([[9.375, 3.0625, 1.51],
 # Convert new_coordinates to a pandas DataFrame with correct column names
 new_coordinates_df = pd.DataFrame(new_coordinates, columns=['X', 'Y', 'Z'])
 
-# Predict the maintenance steps for the given coordinates using the stacked classifier
+# Predict the maintenance steps for the given coordinates using the loaded stacked classifier
 predicted_steps = stacking_clf.predict(new_coordinates_df)
 
 # Output the predicted maintenance steps for the given coordinates
-print("Predicted Maintenance Steps for the given coordinates:")
+print("\nnPredicted Maintenance Steps for the given coordinates:\n")
 for coords, step in zip(new_coordinates, predicted_steps):
     print(f"Coordinates {coords} -> Predicted Maintenance Step: {step}")
 
+# Visualization (same as before)
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
-# Plot the original training data
+# Plot the original training data (this assumes you have access to `train_data`)
 sc = ax.scatter(train_data['X'], train_data['Y'], train_data['Z'], c=train_data['Step'], cmap='viridis', label='Training Data')
 plt.colorbar(sc, ax=ax, label='Step')
 
