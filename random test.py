@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Oct 16 22:56:12 2024
+
+@author: Anant
+"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,11 +13,11 @@ from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSe
 from sklearn.ensemble import RandomForestClassifier, StackingClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import f1_score, confusion_matrix
+from sklearn.metrics import f1_score, confusion_matrix, precision_score, accuracy_score, recall_score
 import joblib
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import ConfusionMatrixDisplay
-from sklearn.metrics import precision_score, accuracy_score, recall_score
+
 # Load your dataset
 csv_file = 'Project_1_Data.csv'
 df = pd.read_csv(csv_file)
@@ -31,28 +38,28 @@ train_data['Step'] = y_train.values
 
 """ PLotting the Data and the Correlation Matrix """
 
-# Plot histograms for X, Y, Z, and Step using training data
+# Plot histograms for X, Y, Z, and Step
 plt.figure(figsize=(12, 10))
 
-# Histogram for X (from train_data)
+# Histogram for X
 plt.subplot(2, 2, 1)
-sns.histplot(train_data['X'], kde=True, bins=20, color='blue')
-plt.title('Histogram of X (Training Data)')
+sns.histplot(df['X'], kde=True, bins=20, color='blue')
+plt.title('Histogram of X')
 
-# Histogram for Y (from train_data)
+# Histogram for Y
 plt.subplot(2, 2, 2)
-sns.histplot(train_data['Y'], kde=True, bins=20, color='green')
-plt.title('Histogram of Y (Training Data)')
+sns.histplot(df['Y'], kde=True, bins=20, color='green')
+plt.title('Histogram of Y')
 
-# Histogram for Z (from train_data)
+# Histogram for Z
 plt.subplot(2, 2, 3)
-sns.histplot(train_data['Z'], kde=True, bins=20, color='red')
-plt.title('Histogram of Z (Training Data)')
+sns.histplot(df['Z'], kde=True, bins=20, color='red')
+plt.title('Histogram of Z')
 
-# Histogram for Step (from train_data)
+# Histogram for Step
 plt.subplot(2, 2, 4)
-sns.histplot(train_data['Step'], kde=False, bins=13, color='purple')
-plt.title('Histogram of Step (Maintenance Steps - Training Data)')
+sns.histplot(df['Step'], kde=False, bins=13, color='purple')
+plt.title('Histogram of Step (Maintenance Steps)')
 
 plt.tight_layout()
 plt.show()
@@ -95,16 +102,15 @@ ax.view_init(elev=30, azim=120)
 
 # Show the plot
 plt.show()
-# Pearson Correlation using only the training data
-correlation_matrix = train_data[['X', 'Y', 'Z', 'Step']].corr(method='pearson')
 
-# Plotting the Pearson Correlation Matrix
-plt.figure(figsize=(10, 8))
+# Correlation matrix using only the training data
+correlation_matrix = train_data[['X', 'Y', 'Z', 'Step']].corr()
+plt.figure()
 sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', cbar=True, square=True, linewidths=0.5)
-plt.title('Pearson Correlation Matrix of Training Data (X, Y, Z, and Step)', fontsize=15)
+plt.title('Correlation Matrix of Training Data (X, Y, Z, and Step)', fontsize=15)
 plt.show()
 
-"""======================= Logistic Regression Classifier ===================================================================="""
+"""======================= Logistic Regression Classifier (Training & Test Data) ====================================================================""" 
 
 # Logistic Regression Classifier with GridSearchCV
 print("\n======= Logistic Regression Classifier =======\n")
@@ -130,26 +136,35 @@ grid_search_lr.fit(x_train, y_train)
 # Best parameters from Grid Search
 print(f"Best parameters from Grid Search: {grid_search_lr.best_params_}\n")
 
-# Predict using the best Logistic Regression model from Grid Search
-y_pred_lr_grid = grid_search_lr.predict(x_test)
+# Predict on the test and train data
+y_pred_lr_grid_test = grid_search_lr.predict(x_test)
+y_pred_lr_grid_train = grid_search_lr.predict(x_train)
 
-# Calculate and print F1 score for Logistic Regression
-f1_grid_search_lr = f1_score(y_test, y_pred_lr_grid, average='weighted')
-print(f"F1 Score for the best Logistic Regression model from Grid Search: {f1_grid_search_lr:.4f}\n")
+# Test metrics
+f1_grid_search_lr_test = f1_score(y_test, y_pred_lr_grid_test, average='weighted')
+recall_lr_test = recall_score(y_test, y_pred_lr_grid_test, average='weighted')
+precision_lr_test = precision_score(y_test, y_pred_lr_grid_test, average='weighted')
+accuracy_lr_test = accuracy_score(y_test, y_pred_lr_grid_test)
 
-# Recall score
-recall_lr = recall_score(y_test, y_pred_lr_grid, average='weighted')
-print(f"Recall for Logistic Regression: {recall_lr:.4f}\n")
+# Train metrics
+f1_grid_search_lr_train = f1_score(y_train, y_pred_lr_grid_train, average='weighted')
+recall_lr_train = recall_score(y_train, y_pred_lr_grid_train, average='weighted')
+precision_lr_train = precision_score(y_train, y_pred_lr_grid_train, average='weighted')
+accuracy_lr_train = accuracy_score(y_train, y_pred_lr_grid_train)
 
-# Precision score
-precision_lr = precision_score(y_test, y_pred_lr_grid, average='weighted', zero_division=0)
-print(f"Precision for Logistic Regression: {precision_lr:.4f}\n")
+# Print Test Metrics
+print(f"F1 Score for Logistic Regression (Test Data): {f1_grid_search_lr_test:.4f}")
+print(f"Recall for Logistic Regression (Test Data): {recall_lr_test:.4f}")
+print(f"Precision for Logistic Regression (Test Data): {precision_lr_test:.4f}")
+print(f"Accuracy for Logistic Regression (Test Data): {accuracy_lr_test:.4f}\n")
 
-# Accuracy score
-accuracy_lr = accuracy_score(y_test, y_pred_lr_grid)
-print(f"Accuracy for Logistic Regression: {accuracy_lr:.4f}\n")
+# Print Train Metrics
+print(f"F1 Score for Logistic Regression (Training Data): {f1_grid_search_lr_train:.4f}")
+print(f"Recall for Logistic Regression (Training Data): {recall_lr_train:.4f}")
+print(f"Precision for Logistic Regression (Training Data): {precision_lr_train:.4f}")
+print(f"Accuracy for Logistic Regression (Training Data): {accuracy_lr_train:.4f}\n")
 
-'''================== Random Forest Classifier ==============================================================================='''
+'''================== Random Forest Classifier (Training & Test Data) ==============================================================================='''
 
 print("======= Random Forest Classifier =======\n")
 rf_classifier = RandomForestClassifier(random_state=500953158)
@@ -174,44 +189,36 @@ grid_search_rf.fit(x_train, y_train)
 # Best parameters from grid search
 print(f"Best parameters from Grid Search: {grid_search_rf.best_params_}\n")
 
-# Predict using the best Random Forest model from grid search
-y_pred_rf_grid = grid_search_rf.predict(x_test)
+# Predict on the test and train data
+y_pred_rf_grid_test = grid_search_rf.predict(x_test)
+y_pred_rf_grid_train = grid_search_rf.predict(x_train)
 
-# Calculate and print F1 score`
-f1_grid_search = f1_score(y_test, y_pred_rf_grid, average='weighted')
-print(f"F1 Score for the best Random Forest model from Grid Search: {f1_grid_search:.4f}\n")
+# Test metrics
+f1_grid_search_rf_test = f1_score(y_test, y_pred_rf_grid_test, average='weighted')
+recall_rf_test = recall_score(y_test, y_pred_rf_grid_test, average='weighted')
+precision_rf_test = precision_score(y_test, y_pred_rf_grid_test, average='weighted')
+accuracy_rf_test = accuracy_score(y_test, y_pred_rf_grid_test)
 
-# Recall score
-recall_rf = recall_score(y_test, y_pred_rf_grid, average='weighted', zero_division=0)
-print(f"Recall for Random Forest: {recall_rf:.4f}\n")
+# Train metrics
+f1_grid_search_rf_train = f1_score(y_train, y_pred_rf_grid_train, average='weighted')
+recall_rf_train = recall_score(y_train, y_pred_rf_grid_train, average='weighted')
+precision_rf_train = precision_score(y_train, y_pred_rf_grid_train, average='weighted')
+accuracy_rf_train = accuracy_score(y_train, y_pred_rf_grid_train)
 
-# Precision score
-precision_rf = precision_score(y_test, y_pred_rf_grid, average='weighted', zero_division=0)
-print(f"Precision for Random Forest: {precision_rf:.4f}\n")
+# Print Test Metrics
+print(f"F1 Score for Random Forest (Test Data): {f1_grid_search_rf_test:.4f}")
+print(f"Recall for Random Forest (Test Data): {recall_rf_test:.4f}")
+print(f"Precision for Random Forest (Test Data): {precision_rf_test:.4f}")
+print(f"Accuracy for Random Forest (Test Data): {accuracy_rf_test:.4f}\n")
 
-# Accuracy score
-accuracy_rf = accuracy_score(y_test, y_pred_rf_grid)
-print(f"Accuracy for Random Forest: {accuracy_rf:.4f}\n")
+# Print Train Metrics
+print(f"F1 Score for Random Forest (Training Data): {f1_grid_search_rf_train:.4f}")
+print(f"Recall for Random Forest (Training Data): {recall_rf_train:.4f}")
+print(f"Precision for Random Forest (Training Data): {precision_rf_train:.4f}")
+print(f"Accuracy for Random Forest (Training Data): {accuracy_rf_train:.4f}\n")
 
+'''================== SVM Classifier (Training & Test Data) ==============================================================================='''
 
-# Predict using the best Random Forest model from Grid Search
-y_pred_rf_grid = grid_search_rf.predict(x_train)
-
-# Generate confusion matrix for the Random Forest Classifier
-confusion_matrix_rf = confusion_matrix(y_train, y_pred_rf_grid)
-
-# Display the confusion matrix
-disp_rf = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix_rf)
-
-# Plot the confusion matrix with a color map
-disp_rf.plot(cmap='Blues')
-plt.title("Confusion Matrix for Random Forest Classifier")
-plt.figure(figsize=(12, 10))
-plt.show()
-
-'''================== SVM Classifier ==============================================================================='''
-
-# SVM Classifier model with GridSearchCV
 print("\n======= SVM Classifier =======\n")
 svm_classifier = SVC(random_state=500953158)
 
@@ -229,30 +236,39 @@ grid_search_svm = GridSearchCV(estimator=svm_classifier,
 grid_search_svm.fit(x_train, y_train)
 
 # Best parameters from Grid Search
-print(f"Best parameters from Grid Search: {grid_search_svm.best_params_}")
+print(f"Best parameters from Grid Search: {grid_search_svm.best_params_}\n")
 
-# Predict using the best SVM model from Grid Search
-y_pred_svm_grid = grid_search_svm.predict(x_test)
+# Predict on the test and train data
+y_pred_svm_grid_test = grid_search_svm.predict(x_test)
+y_pred_svm_grid_train = grid_search_svm.predict(x_train)
 
-# Calculate and print F1 score
-f1_grid_search_svm = f1_score(y_test, y_pred_svm_grid, average='weighted')
-print(f"F1 Score for the best SVM model from Grid Search: {f1_grid_search_svm:.4f}\n")
+# Test metrics
+f1_grid_search_svm_test = f1_score(y_test, y_pred_svm_grid_test, average='weighted')
+recall_svm_test = recall_score(y_test, y_pred_svm_grid_test, average='weighted')
+precision_svm_test = precision_score(y_test, y_pred_svm_grid_test, average='weighted')
+accuracy_svm_test = accuracy_score(y_test, y_pred_svm_grid_test)
 
-# Recall score
-recall_svm = recall_score(y_test, y_pred_svm_grid, average='weighted')
-print(f"Recall for SVM: {recall_svm:.4f}\n")
+# Train metrics
+f1_grid_search_svm_train = f1_score(y_train, y_pred_svm_grid_train, average='weighted')
+recall_svm_train = recall_score(y_train, y_pred_svm_grid_train, average='weighted')
+precision_svm_train = precision_score(y_train, y_pred_svm_grid_train, average='weighted')
+accuracy_svm_train = accuracy_score(y_train, y_pred_svm_grid_train)
 
-# Precision score
-precision_svm = precision_score(y_test, y_pred_svm_grid, average='weighted', zero_division=0)
-print(f"Precision for SVM: {precision_svm:.4f}\n")
+# Print Test Metrics
+print(f"F1 Score for SVM (Test Data): {f1_grid_search_svm_test:.4f}")
+print(f"Recall for SVM (Test Data): {recall_svm_test:.4f}")
+print(f"Precision for SVM (Test Data): {precision_svm_test:.4f}")
+print(f"Accuracy for SVM (Test Data): {accuracy_svm_test:.4f}\n")
 
-# Accuracy score
-accuracy_svm = accuracy_score(y_test, y_pred_svm_grid)
-print(f"Accuracy for SVM: {accuracy_svm:.4f}\n")
+# Print Train Metrics
+print(f"F1 Score for SVM (Training Data): {f1_grid_search_svm_train:.4f}")
+print(f"Recall for SVM (Training Data): {recall_svm_train:.4f}")
+print(f"Precision for SVM (Training Data): {precision_svm_train:.4f}")
+print(f"Accuracy for SVM (Training Data): {accuracy_svm_train:.4f}\n")
 
-'''================== Decision Tree Classifier ============================================================================'''
+'''================== Decision Tree Classifier (Training & Test Data) ==============================================================================='''
 
-print("\n======= Decision Tree Classifier (Randomized Search) =======\n")
+print("\n======= Decision Tree Classifier (Training Data) =======\n")
 dt_classifier = DecisionTreeClassifier(random_state=500953158)
 
 # Parameter distribution for RandomizedSearchCV
@@ -274,32 +290,55 @@ random_search_dt = RandomizedSearchCV(estimator=dt_classifier,
                                       random_state=500953158)
 random_search_dt.fit(x_train, y_train)
 
-# Predict using the best Decision Tree model from Randomized Search
-y_pred_dt_random = random_search_dt.predict(x_test)
+# Predict on the test and train data
+y_pred_dt_random_test = random_search_dt.predict(x_test)
+y_pred_dt_random_train = random_search_dt.predict(x_train)
 
-# Calculate and print F1 score
-f1_random_search_dt = f1_score(y_test, y_pred_dt_random, average='weighted')
-print(f"F1 Score for the best Decision Tree model from Randomized Search: {f1_random_search_dt:.4f}\n")
+# Test metrics
+f1_random_search_dt_test = f1_score(y_test, y_pred_dt_random_test, average='weighted')
+recall_dt_test = recall_score(y_test, y_pred_dt_random_test, average='weighted')
+precision_dt_test = precision_score(y_test, y_pred_dt_random_test, average='weighted')
+accuracy_dt_test = accuracy_score(y_test, y_pred_dt_random_test)
 
-# Recall score
-recall_dt = recall_score(y_test, y_pred_dt_random, average='weighted')
-print(f"Recall for Decision Tree: {recall_dt:.4f}\n")
+# Train metrics
+f1_random_search_dt_train = f1_score(y_train, y_pred_dt_random_train, average='weighted')
+recall_dt_train = recall_score(y_train, y_pred_dt_random_train, average='weighted')
+precision_dt_train = precision_score(y_train, y_pred_dt_random_train, average='weighted')
+accuracy_dt_train = accuracy_score(y_train, y_pred_dt_random_train)
 
-# Precision score
-precision_dt = precision_score(y_test, y_pred_dt_random, average='weighted', zero_division=0)
-print(f"Precision for Decision Tree: {precision_dt:.4f}\n")
+# Print Test Metrics
+print(f"F1 Score for Decision Tree (Test Data): {f1_random_search_dt_test:.4f}")
+print(f"Recall for Decision Tree (Test Data): {recall_dt_test:.4f}")
+print(f"Precision for Decision Tree (Test Data): {precision_dt_test:.4f}")
+print(f"Accuracy for Decision Tree (Test Data): {accuracy_dt_test:.4f}\n")
 
-# Accuracy score
-accuracy_dt = accuracy_score(y_test, y_pred_dt_random)
-print(f"Accuracy for Decision Tree: {accuracy_dt:.4f}\n")
+# Print Train Metrics
+print(f"F1 Score for Decision Tree (Training Data): {f1_random_search_dt_train:.4f}")
+print(f"Recall for Decision Tree (Training Data): {recall_dt_train:.4f}")
+print(f"Precision for Decision Tree (Training Data): {precision_dt_train:.4f}")
+print(f"Accuracy for Decision Tree (Training Data): {accuracy_dt_train:.4f}\n")
 
-print("\n======= Stacking Classifier =======\n")
+# Predict using the best Random Forest model from Grid Search
+y_pred_rf_grid = grid_search_rf.predict(x_test)
+
+# Generate confusion matrix for the Random Forest Classifier
+confusion_matrix_rf = confusion_matrix(y_test, y_pred_rf_grid)
+
+# Display the confusion matrix
+disp_rf = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix_rf)
+
+# Plot the confusion matrix with a color map
+disp_rf.plot(cmap='Blues')
+plt.title("Confusion Matrix for Random Forest Classifier")
+plt.show()
+
+'''================== Confusion Matrices and Visualization for Stacked Classifier ==========================================================='''
+
 # Stacking Classifier
 estimators = [
     ('rf', grid_search_rf.best_estimator_),  # Random Forest from Grid Search
     ('lr', grid_search_lr.best_estimator_)   # Logistic Regression from Grid Search
 ]
-
 # Stacking Classifier with Logistic Regression as final estimator
 stacking_clf = StackingClassifier(estimators=estimators, final_estimator=LogisticRegression(max_iter=500))
 
@@ -308,7 +347,7 @@ stacking_clf.fit(x_train, y_train)
 
 # Predict using the Stacking Classifier
 y_pred_stacking = stacking_clf.predict(x_test)
-y_pred_stacking_train = stacking_clf.predict(x_train)
+
 # Calculate and print F1 Score for the Stacked Model
 f1_stacking = f1_score(y_test, y_pred_stacking, average='weighted')
 print(f"\nF1 Score for the Stacked Model: {f1_stacking:.4f}\n")
@@ -318,7 +357,7 @@ recall_stacking = recall_score(y_test, y_pred_stacking, average='weighted')
 print(f"Recall for Stacked Classifier: {recall_stacking:.4f}\n")
 
 # Precision score
-precision_stacking = precision_score(y_test, y_pred_stacking, average='weighted', zero_division=0)
+precision_stacking = precision_score(y_test, y_pred_stacking, average='weighted')
 print(f"Precision for Stacked Classifier: {precision_stacking:.4f}\n")
 
 # Accuracy score
@@ -326,7 +365,7 @@ accuracy_stacking = accuracy_score(y_test, y_pred_stacking)
 print(f"Accuracy for Stacked Classifier: {accuracy_stacking:.4f}\n")
 
 # Confusion matrix for the Stacked Model
-confusion_matrix_stacked = confusion_matrix(y_train, y_pred_stacking_train)
+confusion_matrix_stacked = confusion_matrix(y_test, y_pred_stacking)
 disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix_stacked)
 disp.plot(cmap='Blues')
 plt.title("Confusion Matrix for Stacked Model")
@@ -336,7 +375,6 @@ plt.show()
 stacking_clf = joblib.load('stacking_model.joblib')
 print("Stacking model loaded from 'stacking_model.joblib'.")
 
-print("\n======= Predicting Coordinates =======\n")
 # Define new coordinates
 new_coordinates = np.array([[9.375, 3.0625, 1.51], 
                             [6.995, 5.125, 0.3875], 
@@ -378,3 +416,4 @@ ax.legend()
 
 # Show the updated plot
 plt.show()
+
