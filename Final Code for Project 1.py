@@ -355,26 +355,56 @@ print("\nPredicted Maintenance Steps for the given coordinates:\n")
 for coords, step in zip(new_coordinates, predicted_steps):
     print(f"Coordinates {coords} -> Predicted Maintenance Step: {step}")
 
-# Visualization (same as before)
-fig = plt.figure()
+# 3D Scatter Plot using only the training data
+fig = plt.figure(figsize=(10, 8))
 ax = fig.add_subplot(111, projection='3d')
 
-# Plot the original training data (this assumes you have access to `train_data`)
-sc = ax.scatter(train_data['X'], train_data['Y'], train_data['Z'], c=train_data['Step'], cmap='viridis', label='Training Data')
-plt.colorbar(sc, ax=ax, label='Step')
+# Plot the training data as before, for consistency
+sc = ax.scatter(train_data['X'], 
+                train_data['Y'], 
+                train_data['Z'], 
+                c=train_data['Step'], 
+                cmap='viridis', 
+                s=50,        # Adjusted size of the markers
+                alpha=0.8,   # Slight transparency for better visibility
+                edgecolors='w',  # White edge color for markers
+                linewidth=0.5,   # Thinner edge for better marker distinction
+                label='Training Data')
 
-# Plot the new predicted points in red
-ax.scatter(new_coordinates[:, 0], new_coordinates[:, 1], new_coordinates[:, 2], 
-           c='red', label='Predicted Data', s=100, edgecolors='k')
+# Adding a color bar with the label
+cbar = plt.colorbar(sc, ax=ax, label='Step')
+cbar.set_ticks(range(int(train_data['Step'].min()), int(train_data['Step'].max())+1))
 
-# Set labels and title
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-ax.set_title('3D Scatter Plot with Training Data and Predicted Points')
+# Set axis labels
+ax.set_xlabel('X', fontsize=12, labelpad=10)
+ax.set_ylabel('Y', fontsize=12, labelpad=10)
+ax.set_zlabel('Z', fontsize=12, labelpad=10)
+
+# Set axis limits for better view control
+ax.set_xlim(train_data['X'].min(), train_data['X'].max())
+ax.set_ylim(train_data['Y'].min(), train_data['Y'].max())
+ax.set_zlim(train_data['Z'].min(), train_data['Z'].max())
+
+# Set a clean title
+ax.set_title('3D Scatter Plot of Training Data (X, Y, Z) with Step', fontsize=14, pad=20)
+
+# Rotate the view for a better 3D effect
+ax.view_init(elev=30, azim=120)
+
+# Plot the new predicted points in red with the same formatting adjustments
+ax.scatter(new_coordinates[:, 0], 
+           new_coordinates[:, 1], 
+           new_coordinates[:, 2], 
+           c='red', 
+           label='Predicted Data', 
+           s=100,           # Larger size for the predicted points
+           alpha=0.8,       # Transparency to match training data points
+           edgecolors='k',  # Black edge color for predicted points
+           linewidth=0.5)   # Thin edge for consistency
 
 # Show legend to differentiate between original and predicted points
 ax.legend()
 
 # Show the updated plot
 plt.show()
+
